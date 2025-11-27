@@ -83,8 +83,15 @@
     </div>
 
 <script>
-    // === 1. НАСТРОЙКИ ===
-    const peers = ['https://gun-manhattan.herokuapp.com/gun']; // Один надежный сервер
+    
+     // === 1. НАСТРОЙКИ СЕТИ (ОБНОВЛЕННЫЙ СПИСОК) ===
+    const peers = [
+        'https://gun-manhattan.herokuapp.com/gun',
+        'https://gun-eu.herokuapp.com/gun',
+        'https://gun-us.herokuapp.com/gun',
+        'https://peer.wallie.io/gun',
+        'https://plumm-gun-peer.herokuapp.com/gun'
+    ];
     const gun = Gun({ peers: peers });
     const chat = gun.get('chat-final-v1'); // Имя комнаты
 
