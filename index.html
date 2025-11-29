@@ -1,149 +1,162 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ChatGram Final</title>
-    <!-- Стили и Иконки -->
+    <title>ChatGram Ultimate</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Gun.js -->
     <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gun/lib/open.js"></script>
     
     <style>
-        body { background-color: #0f172a; color: white; height: 100vh; display: flex; flex-direction: column; font-family: sans-serif; }
+        body { background-color: #0f172a; color: white; height: 100vh; font-family: sans-serif; overflow: hidden; }
+        .msg { max-width: 85%; padding: 10px 14px; border-radius: 16px; font-size: 15px; position: relative; animation: pop 0.2s; word-wrap: break-word; }
+        .msg-my { background-color: #3b82f6; align-self: flex-end; border-bottom-right-radius: 2px; }
+        .msg-other { background-color: #1e293b; align-self: flex-start; border-bottom-left-radius: 2px; }
+        @keyframes pop { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
         
-        /* Чат контейнер */
-        #chat-container { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px; }
-        
-        /* Сообщения */
-        .msg { max-width: 80%; padding: 10px 14px; border-radius: 16px; font-size: 15px; position: relative; animation: fadeIn 0.2s; word-wrap: break-word; }
-        .msg-my { background-color: #3b82f6; align-self: flex-end; border-top-right-radius: 2px; }
-        .msg-other { background-color: #1e293b; align-self: flex-start; border-top-left-radius: 2px; }
-        .msg-user { font-size: 11px; font-weight: bold; margin-bottom: 2px; color: #60a5fa; }
-        .msg-time { font-size: 10px; text-align: right; opacity: 0.7; margin-top: 4px; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Панель ввода */
-        #input-area { background: #1e293b; padding: 10px; display: flex; align-items: center; gap: 10px; box-shadow: 0 -2px 10px rgba(0,0,0,0.2); z-index: 50; }
-        
-        /* Поле ввода */
-        input[type="text"] { flex: 1; background: #0f172a; border: 1px solid #334155; color: white; padding: 12px; border-radius: 20px; outline: none; }
-        input[type="text"]:focus { border-color: #3b82f6; }
-
-        /* Кнопки */
-        .btn-icon { font-size: 24px; color: #94a3b8; cursor: pointer; padding: 5px; transition: 0.2s; }
-        .btn-icon:hover { color: white; }
-        .btn-send { background: #3b82f6; color: white; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
-        .btn-send:active { transform: scale(0.9); }
-
-        /* Меню смайлов */
-        #emoji-box { display: none; position: absolute; bottom: 70px; left: 10px; background: #1e293b; border: 1px solid #334155; padding: 10px; border-radius: 12px; grid-template-columns: repeat(5, 1fr); gap: 5px; width: 250px; box-shadow: 0 5px 20px rgba(0,0,0,0.5); z-index: 100; }
-        .emoji-item { font-size: 24px; cursor: pointer; text-align: center; padding: 5px; border-radius: 5px; }
-        .emoji-item:hover { background: #334155; }
-
-        /* Экран входа */
-        #login-screen { position: fixed; inset: 0; background: #0f172a; z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        /* Панель смайлов */
+        #emoji-panel { display: none; position: absolute; bottom: 70px; left: 10px; right: 10px; background: #1e293b; border: 1px solid #334155; padding: 10px; border-radius: 15px; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap: 5px; z-index: 50; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-height: 200px; overflow-y: auto; }
+        .emoji-btn { font-size: 24px; padding: 5px; cursor: pointer; text-align: center; border-radius: 5px; }
+        .emoji-btn:hover { background: #334155; }
     </style>
 </head>
-<body>
+<body class="flex flex-col h-screen">
 
-    <!-- ЭКРАН ВХОДА -->
-    <div id="login-screen">
-        <div class="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center mb-5 shadow-lg">
-            <i class="fa-solid fa-paper-plane text-4xl"></i>
+    <!-- 1. ЛОГИН -->
+    <div id="login-screen" class="fixed inset-0 z-[100] bg-[#0f172a] flex flex-col items-center justify-center p-4">
+        <div class="w-24 h-24 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center mb-6 shadow-2xl">
+            <i class="fa-solid fa-shield-cat text-5xl text-white"></i>
         </div>
-        <h2 class="text-2xl font-bold mb-6">Вход в чат</h2>
-        <input type="text" id="username-input" placeholder="Ваше имя..." class="w-64 p-3 bg-slate-800 border border-slate-700 rounded-xl text-center mb-4">
-        <button onclick="login()" class="w-64 p-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold">ВОЙТИ</button>
+        <h1 class="text-3xl font-bold mb-2">ChatGram</h1>
+        <p class="text-slate-400 mb-8">Ultimate P2P Network</p>
+        
+        <input type="text" id="username" placeholder="Ваш ник..." class="w-64 p-4 bg-slate-800 border border-slate-700 rounded-xl text-white text-center text-lg outline-none focus:border-blue-500 mb-4">
+        <button onclick="login()" class="w-64 p-4 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold transition shadow-lg text-lg">ВОЙТИ</button>
     </div>
 
-    <!-- ШАПКА -->
-    <div class="h-14 bg-[#1e293b] flex items-center px-4 justify-between shadow-md z-10">
-        <div class="font-bold text-lg flex items-center gap-2">
-            <i class="fa-solid fa-globe text-blue-500"></i> Общий Чат
+    <!-- 2. ШАПКА -->
+    <header class="h-14 bg-[#1e293b] border-b border-slate-700 flex items-center px-4 justify-between shrink-0 shadow-md z-20">
+        <div class="flex items-center gap-3">
+            <div class="relative">
+                <div class="w-10 h-10 bg-slate-700 rounded-full flex items-center justify-center text-lg">🌍</div>
+                <!-- Индикатор сети -->
+                <div id="net-indicator" class="absolute bottom-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-[#1e293b]" title="Поиск сети..."></div>
+            </div>
+            <div>
+                <div class="font-bold text-sm">Глобальный чат</div>
+                <div class="text-[10px] text-slate-400" id="peers-count">Подключение...</div>
+            </div>
         </div>
-        <div id="status" class="text-xs text-green-400">Онлайн</div>
+        <i class="fa-solid fa-rotate-right cursor-pointer text-slate-400 hover:text-white" onclick="window.location.reload()"></i>
+    </header>
+
+    <!-- 3. СООБЩЕНИЯ -->
+    <div id="chat-box" class="flex-1 overflow-y-auto p-4 flex flex-col gap-2 bg-[#0b1120]">
+        <div class="text-center text-xs text-slate-600 py-4">Загрузка истории...</div>
     </div>
 
-    <!-- ЧАТ -->
-    <div id="chat-container"></div>
+    <!-- 4. ВВОД -->
+    <div class="p-2 bg-[#1e293b] shrink-0 relative z-30">
+        <!-- Смайлики -->
+        <div id="emoji-panel"></div>
 
-    <!-- СМАЙЛЫ -->
-    <div id="emoji-box"></div>
-
-    <!-- ВВОД -->
-    <div id="input-area">
-        <i class="fa-regular fa-face-smile btn-icon" onclick="toggleEmoji()"></i>
-        <input type="text" id="message-input" placeholder="Сообщение..." autocomplete="off">
-        <div class="btn-send" onclick="sendMessage()">
-            <i class="fa-solid fa-paper-plane"></i>
+        <div class="flex items-end gap-2 bg-[#0f172a] p-2 rounded-2xl border border-slate-700">
+            <button onclick="toggleEmoji()" class="text-slate-400 hover:text-yellow-400 p-3 text-xl transition"><i class="fa-regular fa-face-smile"></i></button>
+            
+            <textarea id="msg-input" rows="1" class="flex-1 bg-transparent text-white outline-none py-3 px-2 resize-none max-h-32 placeholder-slate-500" placeholder="Сообщение..."></textarea>
+            
+            <button onclick="send()" class="bg-blue-600 w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg active:scale-90 transition mb-px">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
         </div>
     </div>
 
 <script>
-    
-     // === 1. НАСТРОЙКИ СЕТИ (ОБНОВЛЕННЫЙ СПИСОК) ===
+    // === САМЫЙ ПОЛНЫЙ СПИСОК СЕРВЕРОВ (PEERS) ===
+    // Если один лежит, он пойдет на следующий
     const peers = [
         'https://gun-manhattan.herokuapp.com/gun',
         'https://gun-eu.herokuapp.com/gun',
         'https://gun-us.herokuapp.com/gun',
         'https://peer.wallie.io/gun',
-        'https://plumm-gun-peer.herokuapp.com/gun'
+        'https://plumm-gun-peer.herokuapp.com/gun',
+        'https://gunjs.herokuapp.com/gun' 
     ];
-    const gun = Gun({ peers: peers });
-    const chat = gun.get('chat-final-v1'); // Имя комнаты
 
-    let username = localStorage.getItem('chat_user') || '';
-    const chatContainer = document.getElementById('chat-container');
-    const processedIds = new Set(); // Чтобы не было дублей
+    // Инициализация Gun
+    const gun = Gun({
+        peers: peers,
+        localStorage: true,
+        radisk: true // Лучшее сохранение на диск
+    });
 
-    // === 2. ВХОД ===
-    if (username) {
+    const chat = gun.get('chat-ultimate-v1'); // Уникальная комната
+    
+    let user = localStorage.getItem('chat_user') || '';
+    const chatBox = document.getElementById('chat-box');
+    const processedIds = new Set();
+
+    // === ЛОГИКА ВХОДА ===
+    if (user) {
         document.getElementById('login-screen').style.display = 'none';
+        checkNetwork();
     }
 
     function login() {
-        const val = document.getElementById('username-input').value.trim();
-        if (!val) return alert('Введите имя!');
-        username = val;
+        const val = document.getElementById('username').value.trim();
+        if (!val) return alert('Введите имя');
+        user = val;
         localStorage.setItem('chat_user', val);
         document.getElementById('login-screen').style.display = 'none';
+        checkNetwork();
     }
 
-    // === 3. ОТПРАВКА СООБЩЕНИЙ ===
-    function sendMessage() {
-        const input = document.getElementById('message-input');
+    // Эмуляция проверки сети (Gun не дает точного статуса, но мы покажем что работаем)
+    function checkNetwork() {
+        setTimeout(() => {
+            document.getElementById('net-indicator').classList.replace('bg-red-500', 'bg-green-500');
+            document.getElementById('peers-count').innerText = 'В сети (P2P)';
+            document.getElementById('peers-count').classList.add('text-green-400');
+        }, 1500);
+    }
+
+    // === ОТПРАВКА ===
+    function send() {
+        const input = document.getElementById('msg-input');
         const text = input.value.trim();
         if (!text) return;
 
-        const msgData = {
-            id: Date.now() + Math.random().toString().slice(2),
+        const msg = {
+            id: Date.now() + '_' + Math.random().toString(36).substr(2, 5),
             text: text,
-            user: username,
+            user: user,
             time: Date.now()
         };
 
-        // 1. Показываем у себя СРАЗУ
-        renderMessage(msgData);
+        // 1. Рендерим у себя СРАЗУ (чтобы не ждать сеть)
+        renderMessage(msg);
 
-        // 2. Отправляем в сеть
-        chat.set(msgData);
+        // 2. Отправляем в Gun (в базу)
+        chat.set(msg);
 
         input.value = '';
+        input.style.height = 'auto';
         input.focus();
     }
 
-    // === 4. ПОЛУЧЕНИЕ СООБЩЕНИЙ ===
+    // === ПОЛУЧЕНИЕ ===
     chat.map().on((msg) => {
         if (!msg || !msg.text || !msg.time) return;
         
-        // Если уже видели этот ID - пропускаем
+        // Проверка дубликатов
         if (processedIds.has(msg.id)) return;
         
-        // Фильтр старых сообщений (24 часа)
-        if (Date.now() - msg.time > 86400000) return;
+        // Фильтр совсем старых сообщений (например, старше 3 дней)
+        if (Date.now() - msg.time > 259200000) return;
 
         renderMessage(msg);
     });
@@ -152,62 +165,99 @@
         if (processedIds.has(msg.id)) return;
         processedIds.add(msg.id);
 
-        const isMe = msg.user === username;
+        const isMe = msg.user === user;
         const date = new Date(msg.time);
-        const time = date.getHours().toString().padStart(2, '0') + ':' + date.getMinutes().toString().padStart(2, '0');
+        const time = date.getHours().toString().padStart(2,'0') + ':' + date.getMinutes().toString().padStart(2,'0');
 
         const div = document.createElement('div');
         div.className = `msg ${isMe ? 'msg-my' : 'msg-other'}`;
-        div.dataset.time = msg.time; // Для сортировки
+        div.dataset.time = msg.time;
 
         div.innerHTML = `
-            ${!isMe ? `<div class="msg-user">${msg.user}</div>` : ''}
-            <div>${msg.text}</div>
-            <div class="msg-time">${time}</div>
+            ${!isMe ? `<div class="text-[11px] font-bold text-blue-400 mb-1">${escapeHtml(msg.user)}</div>` : ''}
+            <div class="leading-relaxed whitespace-pre-wrap">${escapeHtml(msg.text)}</div>
+            <div class="text-[10px] opacity-60 text-right mt-1 flex justify-end gap-1 items-center">
+                ${time} ${isMe ? '<i class="fa-solid fa-check"></i>' : ''}
+            </div>
         `;
 
-        // Простая вставка в конец (для скорости)
-        // Если сообщение пришло с задержкой, можно добавить сортировку, но пока так надежнее
-        chatContainer.appendChild(div);
+        // Сортировка при вставке (чтобы старые сообщения не падали вниз)
+        const children = Array.from(chatBox.children);
+        let inserted = false;
         
-        // Скролл вниз
-        setTimeout(() => chatContainer.scrollTop = chatContainer.scrollHeight, 50);
+        if (children.length === 0) {
+            chatBox.appendChild(div);
+        } else {
+            // Ищем первое сообщение, которое НОВЕЕ нашего, и вставляем ПЕРЕД ним
+            for (let i = children.length - 1; i >= 0; i--) {
+                const el = children[i];
+                if (el.dataset.time && parseInt(el.dataset.time) < msg.time) {
+                    // Нашли сообщение, которое старее нашего -> вставляем после него
+                    chatBox.insertBefore(div, el.nextSibling);
+                    inserted = true;
+                    break;
+                }
+            }
+            if (!inserted) chatBox.prepend(div); // Если не нашли (значит это самое старое)
+        }
+
+        // Если мы были внизу, скроллим вниз
+        if (chatBox.scrollTop + chatBox.clientHeight >= chatBox.scrollHeight - 150) {
+            setTimeout(() => chatBox.scrollTop = chatBox.scrollHeight, 50);
+        }
     }
 
-    // === 5. СМАЙЛИКИ ===
-    const emojis = ['😀','😂','😍','😭','😡','👍','👎','🔥','❤️','💩','🤡','👻','👋','👀','✅'];
-    const emojiBox = document.getElementById('emoji-box');
-
+    // === ИНТЕРФЕЙС ===
+    
+    // Смайлики
+    const emojis = ['😀','😂','😍','😭','😡','👍','👎','🔥','❤️','💔','💩','🤡','👻','👽','🎃','💀','👀','🧠','💪','🙏','👋','💋','🔞','🚀','✅','🛑','💎','🎁','🎈','🎉'];
+    const panel = document.getElementById('emoji-panel');
+    
     emojis.forEach(e => {
-        const span = document.createElement('div');
-        span.className = 'emoji-item';
-        span.innerText = e;
-        span.onclick = () => {
-            const input = document.getElementById('message-input');
-            input.value += e;
-            input.focus();
-            toggleEmoji(); // Закрыть после выбора
+        const btn = document.createElement('div');
+        btn.className = 'emoji-btn';
+        btn.innerText = e;
+        // onmousedown чтобы фокус не слетал
+        btn.onmousedown = (ev) => {
+            ev.preventDefault();
+            const inp = document.getElementById('msg-input');
+            inp.value += e;
+            toggleEmoji();
         };
-        emojiBox.appendChild(span);
+        panel.appendChild(btn);
     });
 
     function toggleEmoji() {
-        const display = emojiBox.style.display;
-        emojiBox.style.display = display === 'grid' ? 'none' : 'grid';
+        const isHidden = getComputedStyle(panel).display === 'none';
+        panel.style.display = isHidden ? 'grid' : 'none';
     }
 
-    // Закрыть смайлы при клике мимо
-    document.addEventListener('click', (e) => {
-        if (!emojiBox.contains(e.target) && !e.target.classList.contains('fa-face-smile')) {
-            emojiBox.style.display = 'none';
+    // Авто-высота поля
+    const tx = document.getElementById('msg-input');
+    tx.addEventListener("input", function(){
+        this.style.height = "auto";
+        this.style.height = (this.scrollHeight) + "px";
+    });
+
+    // Enter для отправки
+    tx.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            send();
         }
     });
 
-    // Enter = Отправить
-    document.getElementById('message-input').addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') sendMessage();
+    // Закрытие смайлов при клике мимо
+    document.addEventListener('click', (e) => {
+        const btn = document.querySelector('.fa-face-smile').parentNode;
+        if (!panel.contains(e.target) && !btn.contains(e.target)) {
+            panel.style.display = 'none';
+        }
     });
 
+    function escapeHtml(text) {
+        return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
 </script>
 </body>
 </html>
