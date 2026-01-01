@@ -1,12 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+  // Рабочие peers Gun
   const peers = [
-      'https://gun-manhattan.herokuapp.com/gun',
-      'https://gun-eu.herokuapp.com/gun',
-      'https://gun-us.herokuapp.com/gun',
-      'https://peer.wallie.io/gun',
-      'https://plumm-gun-peer.herokuapp.com/gun',
-      'https://gunjs.herokuapp.com/gun'
+    'https://gun.eco/gun',           // стабильный публичный
+    'https://guntalk.herokuapp.com/gun', // альтернатива
+    'https://gunjs.herokuapp.com/gun'    // может быть полезен
   ];
 
   const gun = Gun({
@@ -26,8 +24,12 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
       const netInd = document.getElementById('net-indicator');
       const peersCount = document.getElementById('peers-count');
-      if(netInd) { netInd.classList.replace('bg-red-500', 'bg-green-500'); }
-      if(peersCount) { 
+      if(netInd) {
+        netInd.textContent = 'Online';
+        netInd.classList.remove('bg-red-500');
+        netInd.classList.add('bg-green-500');
+      }
+      if(peersCount) {
         peersCount.innerText = 'В сети (P2P)';
         peersCount.classList.add('text-green-400');
       }
@@ -37,6 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Логика входа
   function onLogin() {
     document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('chat-ui').classList.remove('d-none');
     checkNetwork();
     setupChatListeners();
   }
@@ -51,11 +54,10 @@ document.addEventListener('DOMContentLoaded', () => {
     onLogin();
   }
 
-  // Если пользователь уже залогинен, запускаем чат
+  // Если пользователь уже залогинен
   if(user) {
     onLogin();
   } else {
-    // Кнопка входа (привязка)
     const loginBtn = document.querySelector('#login-screen button');
     if(loginBtn) loginBtn.addEventListener('click', login);
   }
@@ -75,7 +77,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     renderMessage(msg, true);
-    chat.set(msg);
+    console.log('Sending message to Gun:', msg);
+    chat.set(msg, ack => console.log('Gun ack:', ack));
     input.value = '';
     input.style.height = 'auto';
     input.focus();
@@ -119,12 +122,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Экранирование HTML
   function escapeHtml(text) {
     return text.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
   }
 
-  // Подключить обработчики UI после DOM загружен
   const sendBtn = document.querySelector('button[onclick="send()"]');
   if(sendBtn) sendBtn.addEventListener('click', send);
 
@@ -136,47 +137,9 @@ document.addEventListener('DOMContentLoaded', () => {
         send();
       }
     });
-    msgInput.addEventListener('input', ()=> {
+    msgInput.addEventListener('input', () => {
       msgInput.style.height = 'auto';
       msgInput.style.height = msgInput.scrollHeight + 'px';
     });
   }
-
-  // Создание и управление панелью смайлов
-  const panel = document.getElementById('emoji-panel');
-  const emojis = ['😀','😂','😍','😭','😡','👍','👎','🔥','❤️','💔','💩','🤡','👻','👽','🎃','💀','👀','🧠','💪','🙏','👋','💋','🔞','🚀','✅','🛑','💎','🎁','🎈','🎉'];
-  emojis.forEach(e => {
-    const btn = document.createElement('div');
-    btn.className = 'emoji-btn';
-    btn.innerText = e;
-    btn.onmousedown = (ev) => {
-      ev.preventDefault();
-      const inp = document.getElementById('msg-input');
-      if(inp) {
-        inp.value += e;
-        toggleEmoji(false);
-        inp.focus();
-      }
-    };
-    if(panel) panel.appendChild(btn);
-  });
-
-  function toggleEmoji(force) {
-    if(!panel) return;
-    if(force === undefined) {
-      const isHidden = getComputedStyle(panel).display === 'none';
-      panel.style.display = isHidden ? 'grid' : 'none';
-    } else {
-      panel.style.display = force ? 'grid' : 'none';
-    }
-  }
-
-  const emojiBtn = document.querySelector('.fa-face-smile')?.parentNode;
-  document.addEventListener('click', (e) => {
-    if(!panel || !emojiBtn) return;
-    if(!panel.contains(e.target) && !emojiBtn.contains(e.target)) {
-      panel.style.display = 'none';
-    }
-  });
-
 });
